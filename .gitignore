@@ -1,4 +1,5 @@
 .env
 mileage.db
 __pycache__/
+flask_session/
 *.pyc

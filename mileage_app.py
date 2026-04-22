@@ -179,7 +179,6 @@ def logout():
 
 
 @app.route("/")
-@login_required
 def home():
     return redirect(url_for("log_trip"))
 
