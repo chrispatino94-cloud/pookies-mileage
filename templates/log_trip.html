@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card-panel p-3 p-sm-4 mb-3">
+  <div class="d-flex justify-content-between align-items-end gap-3">
+    <div>
+      <div class="muted small">Today</div>
+      <div class="stat-number">{{ totals.trips }} trips</div>
+    </div>
+    <div class="text-end">
+      <div class="fs-4 fw-bold">{{ '%.1f'|format(totals.miles) }} mi</div>
+      <div class="muted">{{ totals.deduction|money }} deduction</div>
+    </div>
+  </div>
+</section>
+
+<section class="card-panel p-3 p-sm-4">
+  <h1 class="h3 mb-3">Log Trip</h1>
+  <form method="post" id="tripForm">
+    <div class="mb-3">
+      <label class="form-label" for="date">Date</label>
+      <input class="form-control" type="date" id="date" name="date" value="{{ today }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="trip_type">Trip type</label>
+      <select class="form-select" id="trip_type" name="trip_type" required>
+        {% for trip_type in trip_types %}<option value="{{ trip_type }}">{{ trip_type }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3 d-none" id="clientWrap">
+      <label class="form-label" for="client_name">Client name</label>
+      <input class="form-control" id="client_name" name="client_name" placeholder="Client or pet name">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="start_location">Start location</label>
+      <div class="input-group">
+        <input class="form-control" id="start_location" name="start_location" placeholder="Home, current location, or address">
+        <button class="btn btn-outline-soft" id="useLocation" type="button">Use My Location</button>
+      </div>
+      <input type="hidden" id="lat_start" name="lat_start">
+      <input type="hidden" id="lng_start" name="lng_start">
+      <div class="small muted mt-2" id="geoStatus"></div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="end_location">End location</label>
+      <select class="form-select mb-2" id="end_location" name="end_location">
+        <option value="">Choose saved destination</option>
+        {% for location in locations %}
+          <option value="{{ location.name }} - {{ location.address }}" data-miles="{{ location.typical_miles }}">{{ location.name }} - {{ location.address }}</option>
+        {% endfor %}
+      </select>
+      <input class="form-control" id="custom_end_location" name="custom_end_location" placeholder="Or type a custom destination">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="miles">Miles</label>
+      <input class="form-control" type="number" step="0.1" min="0" id="miles" name="miles" placeholder="0.0" required>
+      <div class="small muted mt-2" id="deductionPreview">Deduction: $0.00</div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label" for="notes">Notes</label>
+      <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optional details for your CPA"></textarea>
+    </div>
+
+    <button class="btn btn-rose btn-lg w-100" type="submit">Log Trip</button>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const tripType = document.getElementById('trip_type');
+const clientWrap = document.getElementById('clientWrap');
+const endSelect = document.getElementById('end_location');
+const milesInput = document.getElementById('miles');
+const deductionPreview = document.getElementById('deductionPreview');
+const useLocation = document.getElementById('useLocation');
+const geoStatus = document.getElementById('geoStatus');
+
+function updateClientField() {
+  clientWrap.classList.toggle('d-none', tripType.value !== 'Client Visit');
+}
+function updateDeduction() {
+  const miles = parseFloat(milesInput.value || '0');
+  deductionPreview.textContent = `Deduction: $${(miles * 0.67).toFixed(2)}`;
+}
+tripType.addEventListener('change', updateClientField);
+endSelect.addEventListener('change', () => {
+  const opt = endSelect.options[endSelect.selectedIndex];
+  if (opt && opt.dataset.miles) {
+    milesInput.value = opt.dataset.miles;
+    updateDeduction();
+  }
+});
+milesInput.addEventListener('input', updateDeduction);
+useLocation.addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    geoStatus.textContent = 'Geolocation is not available on this device.';
+    return;
+  }
+  geoStatus.textContent = 'Getting your location...';
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    document.getElementById('lat_start').value = lat;
+    document.getElementById('lng_start').value = lon;
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+      const data = await response.json();
+      document.getElementById('start_location').value = data.display_name || `${lat}, ${lon}`;
+      geoStatus.textContent = 'Location added.';
+    } catch (error) {
+      document.getElementById('start_location').value = `${lat}, ${lon}`;
+      geoStatus.textContent = 'GPS added. Address lookup failed.';
+    }
+  }, () => {
+    geoStatus.textContent = 'Location permission denied.';
+  }, { enableHighAccuracy: true, timeout: 12000 });
+});
+updateClientField();
+updateDeduction();
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <div class="muted small">Mileage log</div>
+    <h1 class="h3 mb-0">History</h1>
+  </div>
+  <a class="btn btn-outline-soft" href="{{ url_for('export_csv') }}">Export CSV</a>
+</div>
+
+<div class="btn-group w-100 mb-3" role="group">
+  <a class="btn btn-outline-soft {% if active_filter == 'week' %}active{% endif %}" href="{{ url_for('history', filter='week') }}">This Week</a>
+  <a class="btn btn-outline-soft {% if active_filter == 'month' %}active{% endif %}" href="{{ url_for('history', filter='month') }}">This Month</a>
+  <a class="btn btn-outline-soft {% if active_filter == 'all' %}active{% endif %}" href="{{ url_for('history', filter='all') }}">All Time</a>
+</div>
+
+<section class="card-panel overflow-hidden">
+  {% if trips %}
+    {% for trip in trips %}
+      <div class="trip-row p-3">
+        <div class="d-flex justify-content-between gap-3">
+          <div>
+            <div class="fw-bold">{{ trip.date }} - {{ trip.trip_type }}</div>
+            {% if trip.client_name %}<div class="small badge badge-rose rounded-pill mt-1">{{ trip.client_name }}</div>{% endif %}
+            <div class="small muted mt-2">{{ trip.start_location }} to {{ trip.end_location }}</div>
+            {% if trip.notes %}<div class="small muted mt-1">{{ trip.notes }}</div>{% endif %}
+          </div>
+          <div class="text-end flex-shrink-0">
+            <div class="fw-bold">{{ '%.1f'|format(trip.miles) }} mi</div>
+            <div class="muted small">{{ trip.deductible_amount|money }}</div>
+            <form method="post" class="mt-2" onsubmit="return confirm('Delete this trip?');">
+              <input type="hidden" name="trip_id" value="{{ trip.id }}">
+              <button class="btn btn-sm btn-outline-danger rounded-pill" type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="p-4 text-center muted">No trips found for this filter.</div>
+  {% endif %}
+</section>
+{% endblock %}

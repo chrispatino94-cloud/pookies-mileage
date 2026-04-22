@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card-panel p-4 mt-5">
+  <div class="text-center mb-4">
+    <div class="brand fs-3">Pookie's Pet Care</div>
+    <h1 class="h4 mt-2">Mileage Tracker</h1>
+    <p class="muted mb-0">Enter the app password to continue.</p>
+  </div>
+  <form method="post">
+    <label class="form-label" for="password">Password</label>
+    <input class="form-control form-control-lg mb-3" id="password" name="password" type="password" autocomplete="current-password" autofocus required>
+    <button class="btn btn-rose w-100 btn-lg" type="submit">Login</button>
+  </form>
+</section>
+{% endblock %}

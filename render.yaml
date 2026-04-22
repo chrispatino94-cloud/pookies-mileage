@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: pookies-mileage
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn mileage_app:app
+    envVars:
+      - key: APP_PASSWORD
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true

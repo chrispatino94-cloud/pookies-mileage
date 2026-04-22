@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Stats</h1>
+<div class="row g-3 mb-3">
+  <div class="col-12"><div class="card-panel p-3"><div class="muted">This month</div><div class="fs-3 fw-bold">{{ month_summary.trips }} trips</div><div>{{ '%.1f'|format(month_summary.miles) }} miles - {{ month_summary.deduction|money }}</div></div></div>
+  <div class="col-12"><div class="card-panel p-3"><div class="muted">This year</div><div class="fs-3 fw-bold">{{ year_summary.trips }} trips</div><div>{{ '%.1f'|format(year_summary.miles) }} miles - {{ year_summary.deduction|money }}</div></div></div>
+  <div class="col-12"><div class="card-panel p-3"><div class="muted">All time</div><div class="fs-3 fw-bold">{{ all_summary.trips }} trips</div><div>{{ '%.1f'|format(all_summary.miles) }} miles - {{ all_summary.deduction|money }}</div></div></div>
+</div>
+
+<section class="card-panel p-3 mb-3">
+  <div class="muted">Year pace</div>
+  <div class="fs-4 fw-bold">On pace for {{ '%.0f'|format(pace_miles) }} miles</div>
+  <div>{{ pace_deduction|money }} IRS deduction</div>
+</section>
+
+<section class="card-panel p-3 mb-3">
+  <h2 class="h5">Monthly Breakdown</h2>
+  <canvas id="monthlyChart" height="190"></canvas>
+</section>
+
+<section class="card-panel p-3 mb-3">
+  <h2 class="h5">Top Destinations</h2>
+  {% if destinations %}
+    {% for destination in destinations %}
+      <div class="d-flex justify-content-between py-2 trip-row">
+        <div>{{ destination.end_location }}</div>
+        <div class="text-end"><span class="fw-bold">{{ destination.visits }}</span><div class="small muted">{{ '%.1f'|format(destination.miles) }} mi</div></div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="muted">No destinations yet.</div>
+  {% endif %}
+</section>
+
+<section class="card-panel p-3">
+  <div class="muted">Average miles per trip</div>
+  <div class="fs-2 fw-bold">{{ '%.1f'|format(average_miles) }}</div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ monthly_labels|tojson }},
+    datasets: [{
+      label: 'Miles',
+      data: {{ monthly_miles|tojson }},
+      backgroundColor: 'rgba(201,149,108,.72)',
+      borderColor: '#c9956c',
+      borderWidth: 1,
+      borderRadius: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: '#ffffff' } } },
+    scales: {
+      x: { ticks: { color: '#a9b4c4' }, grid: { color: 'rgba(255,255,255,.06)' } },
+      y: { ticks: { color: '#a9b4c4' }, grid: { color: 'rgba(255,255,255,.06)' } }
+    }
+  }
+});
+</script>
+{% endblock %}
